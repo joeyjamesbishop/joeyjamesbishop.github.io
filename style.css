@@ -52,22 +52,20 @@ h1 {
 }
 
 /* Navigation arrows inside carousel */
-.image-nav {
+.image-nav { color:#fff; background: none;
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
   font-size: 2rem;
-  background: rgba(255, 255, 255, 0.1);
+  
   border: none;
   cursor: pointer;
   z-index: 10;
   padding: 0.5rem 1rem;
-  border-radius: 50%;
+  border-radius: 50%; padding: 0.6rem 0.9rem;
   transition: background 0.2s ease;
 }
-.image-nav:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
+.image-nav:hover { opacity: 0.9; }
 .image-nav.left {
   left: 0;
 }
@@ -78,7 +76,7 @@ h1 {
 
 .image-row img,
 .image-row video {
-  max-height: 450px;     
+  max-height: 360px;     
   width: auto;
   border-radius: 10px;
   object-fit: contain;
@@ -157,7 +155,7 @@ h1 {
   .image-row video {
     max-height: 300px;   
   }
-  .image-nav {
+  .image-nav { color:#fff; background: none;
     font-size: 1.7rem;
     padding: 0.4rem 0.8rem;
   }
@@ -205,3 +203,9 @@ h1 {
 
 .lightbox-nav.left { left: 20px; }
 .lightbox-nav.right { right: 20px; }
+
+/* Scroll snap for smoother carousel */
+.image-row { scroll-snap-type: x proximity; }
+.image-row img, .image-row video { scroll-snap-align: center; }
+
+.image-row img, .image-row video { cursor: zoom-in; }

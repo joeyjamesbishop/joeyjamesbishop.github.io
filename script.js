@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // Create lightbox
+  // --- Create lightbox ---
   const lightbox = document.createElement("div");
   lightbox.className = "lightbox";
   lightbox.innerHTML = `
@@ -85,6 +85,45 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   });
-
   lazyMedia.forEach((el) => observer.observe(el));
+
+  // --- Accessibility & performance enhancements (AFTER lightbox setup) ---
+  document.querySelectorAll('img:not([loading])').forEach(img => {
+    img.setAttribute('loading', 'lazy');
+    img.setAttribute('decoding', 'async');
+  });
+
+  document.querySelectorAll('.image-row').forEach(row => {
+    const first = row.querySelector('img');
+    if (first) {
+      first.setAttribute('loading', 'eager');
+      first.setAttribute('fetchpriority', 'high');
+    }
+  });
+
+  // Keyboard support for lightbox
+  document.addEventListener('keydown', (e) => {
+    if (lightbox.style.display === 'flex') {
+      if (e.key === 'Escape') {
+        lightbox.style.display = 'none';
+        if (lightboxMedia?.tagName.toLowerCase() === 'video') lightboxMedia.pause();
+      } else if (e.key === 'ArrowLeft') {
+        showMedia(currentIndex - 1);
+      } else if (e.key === 'ArrowRight') {
+        showMedia(currentIndex + 1);
+      }
+    }
+  });
+
+  // Swipe navigation on touch devices
+  let touchStartX = 0;
+  lightbox.addEventListener('touchstart', (e) => {
+    touchStartX = e.changedTouches[0].clientX;
+  });
+  lightbox.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 40) {
+      showMedia(currentIndex + (dx < 0 ? 1 : -1));
+    }
+  });
 });
