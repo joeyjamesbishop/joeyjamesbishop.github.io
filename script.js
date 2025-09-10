@@ -1,104 +1,90 @@
-document.addEventListener('DOMContentLoaded', () => {
-  const lightbox = document.createElement('div');
-  lightbox.classList.add('lightbox');
+document.addEventListener("DOMContentLoaded", () => {
+  // Create lightbox
+  const lightbox = document.createElement("div");
+  lightbox.className = "lightbox";
+  lightbox.innerHTML = `
+    <span class="lightbox-close">&times;</span>
+    <button class="lightbox-nav left">&#8592;</button>
+    <button class="lightbox-nav right">&#8594;</button>
+  `;
   document.body.appendChild(lightbox);
 
   let lightboxMedia = null;
-
-  const closeBtn = document.createElement('span');
-  closeBtn.classList.add('lightbox-close');
-  closeBtn.innerHTML = '&times;';
-  lightbox.appendChild(closeBtn);
-
-  const prevBtn = document.createElement('button');
-  prevBtn.classList.add('lightbox-nav', 'left');
-  prevBtn.innerHTML = '&#8592;';
-  lightbox.appendChild(prevBtn);
-
-  const nextBtn = document.createElement('button');
-  nextBtn.classList.add('lightbox-nav', 'right');
-  nextBtn.innerHTML = '&#8594;';
-  lightbox.appendChild(nextBtn);
-
   let currentGroup = [];
   let currentIndex = 0;
 
-  const mediaElements = document.querySelectorAll('.image-row img, .image-row video');
-  mediaElements.forEach((media) => {
-    media.addEventListener('click', () => {
-      const group = Array.from(media.closest('.image-row').querySelectorAll('img, video'));
-      currentGroup = group;
-      currentIndex = group.indexOf(media);
-      showMedia(currentIndex);
-      lightbox.style.display = 'flex';
-    });
-  });
-
+  // Show media inside lightbox
   function showMedia(index) {
     if (!currentGroup.length) return;
     currentIndex = (index + currentGroup.length) % currentGroup.length;
 
-    // Remove previous media
-    if (lightboxMedia) {
-      lightbox.removeChild(lightboxMedia);
-      lightboxMedia = null;
-    }
+    if (lightboxMedia) lightboxMedia.remove();
 
     const current = currentGroup[currentIndex];
-    if (current.tagName.toLowerCase() === 'img') {
-      lightboxMedia = document.createElement('img');
-      lightboxMedia.src = current.src;
-    } else if (current.tagName.toLowerCase() === 'video') {
-      lightboxMedia = document.createElement('video');
-      lightboxMedia.src = current.src;
-      lightboxMedia.autoplay = true;
-      lightboxMedia.controls = true;
-      lightboxMedia.loop = true;
-      lightboxMedia.muted = false; // unmute in lightbox
-      lightboxMedia.style.maxHeight = "90vh";
-    }
+    lightboxMedia =
+      current.tagName.toLowerCase() === "img"
+        ? Object.assign(document.createElement("img"), { src: current.dataset.src || current.src })
+        : Object.assign(document.createElement("video"), {
+            src: current.dataset.src || current.src,
+            autoplay: true,
+            controls: true,
+            loop: true,
+            muted: false,
+            style: "max-height:90vh",
+          });
 
-    lightbox.insertBefore(lightboxMedia, closeBtn);
+    lightbox.insertBefore(lightboxMedia, lightbox.querySelector(".lightbox-close"));
   }
 
-  prevBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    showMedia(currentIndex - 1);
-  });
-
-  nextBtn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    showMedia(currentIndex + 1);
-  });
-
-  closeBtn.addEventListener('click', () => {
-    lightbox.style.display = 'none';
-    if (lightboxMedia && lightboxMedia.tagName.toLowerCase() === 'video') {
-      lightboxMedia.pause();
+  // Lightbox navigation
+  lightbox.addEventListener("click", (e) => {
+    if (e.target.classList.contains("lightbox-close")) {
+      lightbox.style.display = "none";
+      if (lightboxMedia?.tagName.toLowerCase() === "video") lightboxMedia.pause();
+    } else if (e.target.classList.contains("lightbox-nav")) {
+      showMedia(currentIndex + (e.target.classList.contains("left") ? -1 : 1));
+    } else if (e.target === lightbox) {
+      lightbox.style.display = "none";
+      if (lightboxMedia?.tagName.toLowerCase() === "video") lightboxMedia.pause();
     }
   });
 
-  lightbox.addEventListener('click', (e) => {
-    if (![lightboxMedia, closeBtn, prevBtn, nextBtn].includes(e.target)) {
-      lightbox.style.display = 'none';
-      if (lightboxMedia && lightboxMedia.tagName.toLowerCase() === 'video') {
-        lightboxMedia.pause();
-      }
+  // Event delegation for opening lightbox
+  document.querySelector(".portfolio").addEventListener("click", (e) => {
+    if (e.target.matches(".image-row img, .image-row video")) {
+      const row = e.target.closest(".image-row");
+      currentGroup = [...row.querySelectorAll("img, video")];
+      currentIndex = currentGroup.indexOf(e.target);
+      showMedia(currentIndex);
+      lightbox.style.display = "flex";
     }
   });
 
   // Carousel scroll arrows
-  document.querySelectorAll('.image-row-wrapper').forEach(wrapper => {
-    const row = wrapper.querySelector('.image-row');
-    const leftArrow = wrapper.querySelector('.image-nav.left');
-    const rightArrow = wrapper.querySelector('.image-nav.right');
+  document.querySelectorAll(".image-row-wrapper").forEach((wrapper) => {
+    const row = wrapper.querySelector(".image-row");
+    wrapper.querySelector(".image-nav.left").addEventListener("click", () =>
+      row.scrollBy({ left: -row.clientWidth / 1.2, behavior: "smooth" })
+    );
+    wrapper.querySelector(".image-nav.right").addEventListener("click", () =>
+      row.scrollBy({ left: row.clientWidth / 1.2, behavior: "smooth" })
+    );
+  });
 
-    leftArrow.addEventListener('click', () => {
-      row.scrollBy({ left: -row.clientWidth / 1.2, behavior: 'smooth' });
-    });
-
-    rightArrow.addEventListener('click', () => {
-      row.scrollBy({ left: row.clientWidth / 1.2, behavior: 'smooth' });
+  // Lazy load images + videos with IntersectionObserver
+  const lazyMedia = document.querySelectorAll("img[loading='lazy'], video[preload='none']");
+  const observer = new IntersectionObserver((entries, obs) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        const media = entry.target;
+        if (media.dataset.src) media.src = media.dataset.src;
+        if (media.tagName.toLowerCase() === "video" && media.dataset.poster) {
+          media.poster = media.dataset.poster;
+        }
+        obs.unobserve(media);
+      }
     });
   });
+
+  lazyMedia.forEach((el) => observer.observe(el));
 });

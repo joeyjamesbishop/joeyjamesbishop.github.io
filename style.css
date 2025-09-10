@@ -75,10 +75,10 @@ h1 {
   right: 0;
 }
 
-/* === Carousel items (images + videos) === */
+
 .image-row img,
 .image-row video {
-  max-height: 600px;     /* was 700px → reduced */
+  max-height: 450px;     
   width: auto;
   border-radius: 10px;
   object-fit: contain;
@@ -91,10 +91,10 @@ h1 {
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
 }
 
-/* Videos can stretch bigger */
+
 .image-row video {
   width: 100%;           
-  max-height: 700px;     /* was 800px → reduced */
+  max-height: 700px;     
 }
 
 /* === Lightbox === */
@@ -147,7 +147,7 @@ h1 {
   right: 20px;
 }
 
-/* === Responsive adjustments === */
+
 @media (max-width: 768px) {
   .image-row {
     gap: 0.5rem;
@@ -155,7 +155,7 @@ h1 {
   }
   .image-row img,
   .image-row video {
-    max-height: 300px;   /* was 350px → reduced */
+    max-height: 300px;   
   }
   .image-nav {
     font-size: 1.7rem;
@@ -167,4 +167,41 @@ h1 {
   h2 {
     font-size: 1.4rem;
   }
+}.lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.9);
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
 }
+
+.lightbox img,
+.lightbox video {
+  max-width: 90%;
+  max-height: 90%;
+}
+
+.lightbox-close {
+  position: absolute;
+  top: 20px;
+  right: 30px;
+  font-size: 2rem;
+  color: white;
+  cursor: pointer;
+}
+
+.lightbox-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 2rem;
+  color: white;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.lightbox-nav.left { left: 20px; }
+.lightbox-nav.right { right: 20px; }
