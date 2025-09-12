@@ -1,31 +1,44 @@
-import os
+import os, re
 from PIL import Image
 
-# Path to your images folder
 input_folder = "images"
-output_folder = "images"  # saves back into the same folder
+output_folder = "images"
+small_width = 1200
+large_width = 2400
 
-# Max widths for resized versions
-small_width = 1200   # for carousel
-large_width = 2400   # for fullscreen lightbox
+def clean_filename(name):
+    # lowercase
+    name = name.lower()
+    # replace spaces and brackets with dashes
+    name = re.sub(r"[ ()+]", "-", name)
+    # remove duplicate dashes
+    name = re.sub(r"-+", "-", name)
+    # strip trailing dashes
+    name = name.strip("-")
+    return name
 
-def resize_image(path, max_width, suffix):
+def resize_and_save(path, base_name):
     img = Image.open(path)
     w, h = img.size
-    if w > max_width:  # only shrink if bigger
-        new_h = int(h * (max_width / w))
-        img = img.resize((max_width, new_h), Image.LANCZOS)
-    base, _ = os.path.splitext(os.path.basename(path))
-    new_name = f"{base}-{suffix}.jpg"  # always save as lowercase .jpg
-    save_path = os.path.join(output_folder, new_name)
-    img.convert("RGB").save(save_path, "JPEG", quality=85, optimize=True)
-    print(f"Saved {save_path}")
 
-# Loop through all files in the images folder
+    for width, suffix in [(small_width, "small"), (large_width, "large")]:
+        new_h = int(h * (width / w)) if w > width else h
+        resized = img.resize((min(w, width), new_h), Image.LANCZOS)
+        new_name = f"{base_name}-{suffix}.jpg"
+        save_path = os.path.join(output_folder, new_name)
+        resized.convert("RGB").save(save_path, "JPEG", quality=85, optimize=True)
+        print(f"Saved {save_path}")
+
 for filename in os.listdir(input_folder):
-    if filename.lower().endswith((".jpg", ".jpeg", ".png")) and "-small" not in filename and "-large" not in filename:
+    if filename.lower().endswith((".jpg", ".jpeg", ".png")) and "small" not in filename and "large" not in filename:
         filepath = os.path.join(input_folder, filename)
-        resize_image(filepath, small_width, "small")
-        resize_image(filepath, large_width, "large")
+        base, _ = os.path.splitext(filename)
+        clean_base = clean_filename(base)
+        # rename original
+        new_original = os.path.join(output_folder, f"{clean_base}.jpg")
+        os.rename(filepath, new_original)
+        print(f"Renamed {filename} → {clean_base}.jpg")
+        # resize
+        resize_and_save(new_original, clean_base)
 
-print("✅ All images resized as .jpg (lowercase)!")
+print("✅ All files cleaned + resized!")
