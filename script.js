@@ -159,15 +159,31 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Carousel scroll arrows
+  // Carousel scroll arrows + touch swipe
   document.querySelectorAll(".image-row-wrapper").forEach((wrapper) => {
     const row = wrapper.querySelector(".image-row");
+    const scrollAmount = () => {
+      const firstItem = row.querySelector("img, video");
+      return firstItem ? firstItem.offsetWidth + 8 : row.clientWidth * 0.8;
+    };
     wrapper.querySelector(".image-nav.left").addEventListener("click", () =>
-      row.scrollBy({ left: -row.clientWidth / 1.2, behavior: "smooth" })
+      row.scrollBy({ left: -scrollAmount(), behavior: "smooth" })
     );
     wrapper.querySelector(".image-nav.right").addEventListener("click", () =>
-      row.scrollBy({ left: row.clientWidth / 1.2, behavior: "smooth" })
+      row.scrollBy({ left: scrollAmount(), behavior: "smooth" })
     );
+
+    // Touch swipe support for carousel rows
+    let swipeStartX = 0;
+    row.addEventListener("touchstart", (e) => {
+      swipeStartX = e.changedTouches[0].clientX;
+    }, { passive: true });
+    row.addEventListener("touchend", (e) => {
+      const dx = e.changedTouches[0].clientX - swipeStartX;
+      if (Math.abs(dx) > 30) {
+        row.scrollBy({ left: dx < 0 ? scrollAmount() : -scrollAmount(), behavior: "smooth" });
+      }
+    }, { passive: true });
   });
 
   // Lazy load videos with IntersectionObserver
